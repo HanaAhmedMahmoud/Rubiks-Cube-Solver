@@ -1,0 +1,416 @@
+﻿@page "/rubixcubecss3dnew"
+@using RubixModel
+<PageTitle>3D Rotating table with buttons</PageTitle>
+<PageTitle>Testing input</PageTitle>
+
+<style>
+    body {
+        background-color: #f5ebf4;
+    }
+</style>
+
+
+<p style="color:green;">@cube.Announcments</p>
+
+@if (isCubeValid == false)
+{
+
+    <h3>Rubik's Cube Scrambler and Solver</h3>
+    <div class="form-group">
+        <label for="cubieInput">Enter the colors of the faces, in the order front, left, right, up, down and back: </label>
+        <input type="text" class="form-control" id="cubieInput" @bind="cube.CubieInput" placeholder="e.g. green, yellow, white, orange, red, blue" />
+    </div>
+    <button @onclick="SubmitFace">Submit Faces</button>
+    <div class="dropdown">
+        <button @onclick="Scramble">Scramble</button>
+        <div class="dropdown-content">
+            <a href="rubixcubecss3dnew" onclick="@(() => Easy())">Easy</a>
+            <a href="rubixcubecss3dnew" onclick="@(() => Medium())">Medium</a>
+            <a href="rubixcubecss3dnew" onclick="@(() => Hard())">Hard</a>
+            <a href="rubixcubecss3dnew" onclick="@(() => Custom())">Custom</a>
+        </div>
+    </div>
+    <button @onclick="StartSolving">Start Solving</button>
+
+    @if (customIsSelected == true)
+    {
+        <p>
+            <label for="NumberOfMoves">Enter a number of moves to scramble </label>
+        <p>
+            <input type="text" id="NumberOfMoves" @bind="cube.NumberOfMoves" placeholder="e.g. 36" />
+            <button @onclick="SubmitNumber">Submit Number</button>
+        <p style="color:red;">@cube.ErrorMessageForNumberOfMovesInput</p>
+        </p>
+        </p>
+
+    }
+    <p style="color:red;">@cube.ErrorMessageForInput</p>
+    <p style="color:red;">@cube.ErrorMessageForNumberOfColours</p>
+    <p style="color:red;">@cube.ErrorMessageForCorner</p>
+    <p style="color:red;">@cube.ErrorMessageForEdge</p>
+}
+else
+{
+<div>
+    @if (cube.Announcments != "Congratulations! You have solved the cube! ")
+    {
+        <h3>Solving instructions : </h3>
+        @if (cube.instruction.GetCurrentInstruction != null)
+        {
+            <h5>Current Instruction: @cube.instruction.GetCurrentInstruction()</h5>
+        }
+        else
+        {
+            <p style="color:red;">No Instruction To Show</p>
+        }
+        <button class="button-up" @onclick="PreviousInstruction"> ⬅️ Previous</button>
+        <button class="button-up" @onclick="NextInstruction"> Next ➡️ </button>
+    }
+    else
+    {
+        <p> </p>    
+
+    }
+
+    @if (cube.ErrorMessageForInstruction != "")
+    {
+        <p style="color:red;">@cube.ErrorMessageForInstruction</p>
+    }
+    @if (instruction.announcment != "")
+    {
+        <p style="color:green;">@instruction.announcment</p>
+    }
+</div>
+
+}
+
+<p> </p>
+
+<!-- https://3dtransforms.desandro.com/cube -->
+<!-- https://www.w3schools.com/cssref/css3_pr_transform.php -->
+<div class="scene">
+    <div class="cubenew @cubeShow">
+
+        <div class="cube__face cube__face--front">
+            <div class="grid-container">
+
+                @for (var r = 0; r < 3; r++)
+                {
+                    @for (int c = 0; c < 3; c++)
+                    {
+                        <div class="grid-item" style="background-color: @cube.faceList[0].face[r, c]; color: white"></div>
+                    }
+                }
+
+            </div>
+        </div>
+        <div class="cube__face cube__face--back">
+            <div class="grid-container">
+                @for (var r = 0; r < 3; r++)
+                {
+                    @for (int c = 0; c < 3; c++)
+                    {
+                        <div class="grid-item" style="background-color: @tempFace[r, c]; color: white"></div>
+                    }
+                }
+            </div>
+        </div>
+        <div class="cube__face cube__face--right">
+            <div class="grid-container">
+                @for (var r = 0; r < 3; r++)
+                {
+                    @for (int c = 0; c < 3; c++)
+                    {
+                        <div class="grid-item" style="background-color: @cube.faceList[2].face[r, c]; color: white"></div>
+                    }
+                }
+            </div>
+        </div>
+        <div class="cube__face cube__face--left">
+            <div class="grid-container">
+                @for (var r = 0; r < 3; r++)
+                {
+                    @for (int c = 0; c < 3; c++)
+                    {
+                        <div class="grid-item" style="background-color: @cube.faceList[1].face[r, c]; color: white"></div>
+                    }
+                }
+            </div>
+        </div>
+        <div class="cube__face cube__face--top">
+            <div class="grid-container">
+                @for (var r = 0; r < 3; r++)
+                {
+                    @for (int c = 0; c < 3; c++)
+                    {
+                        <div class="grid-item" style="background-color: @cube.faceList[4].face[r, c]; color: white"></div>
+                    }
+                }
+            </div>
+        </div>
+        <div class="cube__face cube__face--bottom">
+            <div class="grid-container">
+                @for (var r = 0; r < 3; r++)
+                {
+                    @for (int c = 0; c < 3; c++)
+                    {
+                        <div class="grid-item" style="background-color: @cube.faceList[3].face[r, c]; color: white"></div>
+                    }
+                }
+            </div>
+        </div>
+
+    </div>
+
+
+</div>
+
+
+<p>
+    <h3> Controls: </h3>
+</p>
+
+<button @onclick="seeLeftFace" class="button-up"> ⬅️ Left Face </button>
+<button @onclick="seeRightFace" class="button-up"> ➡️ Right Face</button>
+<button @onclick="seeTopFace" class="button-up"> ⬆️ Top Face</button>
+<button @onclick="seeBottomFace" class="button-up"> ⬇️ Bottom Face</button>
+<button @onclick="seeFrontFace" class="button-up"> ⏫ Front Face </button>
+<button @onclick="seeBackFace" class="button-up"> ⏬ Back Face </button>
+
+<p>
+    <h3> Testing rotations :) </h3>
+</p>
+
+<button @onclick="RotateRightClockwise" class="button-up"> R </button>
+<button @onclick="RotateRightAntiClockwise" class="button-up"> R' </button>
+<button @onclick="RotateLeftClockwise" class="button-up"> L </button>
+<button @onclick="RotateLeftAntiClockwise" class="button-up"> L' </button>
+<button @onclick="RotateUpClockwise" class="button-up"> U </button>
+<button @onclick="RotateUpAntiClockwise" class="button-up"> U' </button>
+<button @onclick="RotateDownClockwise" class="button-up"> D </button>
+<button @onclick="RotateDownAntiClockwise" class="button-up"> D' </button>
+<button @onclick="RotateFrontClockwise" class="button-up"> F </button>
+<button @onclick="RotateFrontAntiClockwise" class="button-up"> F' </button>
+<button @onclick="RotateBackClockwise" class="button-up"> B </button>
+<button @onclick="RotateBackAntiClockwise" class="button-up"> B' </button>
+
+@cubeShow
+
+@code {
+    //Web guide CSS 3D transforms
+    //https://3dtransforms.desandro.com/cube
+
+    public Cube? cube;
+
+    //Paremeter to control cube rotation CSS
+    [Parameter]
+    public string cubeShow { get; set; }
+    private bool isCubeValid = false;
+    private bool isCubeSolved = false;
+    public bool customIsSelected = false;
+    public string[,] tempFace = new string[3, 3];
+    Instruction instruction = new Instruction();
+
+    protected override void OnInitialized()
+    {
+        //create a new cube calling the cube class
+        cube = new Cube();
+
+        //Set cubeshow value
+        cubeShow = cube.faceToDisplay();
+
+    }
+
+    // Code linked to onclick events for buttons to dynamically change CSS
+    // To show the different faces
+    public void seeLeftFace()
+    {
+        cube.SeeLeftFace();
+        cubeShow = cube.faceToDisplay();
+        UpdateTempFace();
+    }
+
+    public void seeRightFace()
+    {
+        cube.SeeRightFace();
+        cubeShow = cube.faceToDisplay();
+        UpdateTempFace();
+    }
+
+    public void seeTopFace()
+    {
+        cube.SeeTopFace();
+        cubeShow = cube.faceToDisplay();
+        UpdateTempFace();
+    }
+
+    public void seeBottomFace()
+    {
+        cube.SeeBottomFace();
+        cubeShow = cube.faceToDisplay();
+        UpdateTempFace();
+    }
+    public void seeFrontFace()
+    {
+        cube.SeeFrontFace();
+        cubeShow = cube.faceToDisplay();
+        UpdateTempFace();
+    }
+    public void seeBackFace()
+    {
+        cube.SeeBackFace();
+        cubeShow = cube.faceToDisplay();
+        UpdateTempFace();
+    }
+
+    //For testing
+    private string? message;
+    private void SubmitFace() //goes to the rubiks cube validation class and submits a face
+    {
+        cube.SubmitFace();
+        cube.CreateFace(cube.GetFace(), cube.currentFace);
+    }
+
+    public void StartSolving()
+    {
+
+        //if (cube.IsCubeSolvable() == true && cube.isCubeSolved() == false)
+        // {
+        // isCubeValid = true;
+        // }
+        //else if (cube.isCubeSolved() == true)
+        // {
+        //    isCubeValid = false; //if the cube is already solved its an invalid input
+        // }
+        isCubeValid = true;
+        cube.ApplyCurrentInstructionToCube();
+    }
+    public void IsSolved()
+    {
+        seeLeftFace();
+        seeRightFace();
+        seeBackFace();
+        seeTopFace();
+        seeBottomFace();
+        seeFrontFace();
+    }
+    public void RotateRightClockwise()
+    {
+        cube.RotateRightClockwise();
+        UpdateTempFace();
+    }
+    public void RotateRightAntiClockwise()
+    {
+        cube.RotateRightAntiClockwise();
+        UpdateTempFace();
+    }
+    public void RotateLeftClockwise()
+    {
+        cube.RotateLeftClockwise();
+        UpdateTempFace();
+    }
+    public void RotateLeftAntiClockwise()
+    {
+        cube.RotateLeftAntiClockwise();
+        UpdateTempFace();
+    }
+    public void RotateUpClockwise()
+    {
+        cube.RotateUpClockwise();
+        UpdateTempFace();
+    }
+    public void RotateUpAntiClockwise()
+    {
+        cube.RotateUpAntiClockwise();
+        UpdateTempFace();
+    }
+    public void RotateDownClockwise()
+    {
+        cube.RotateDownClockwise();
+        UpdateTempFace();
+    }
+    public void RotateDownAntiClockwise()
+    {
+        cube.RotateDownAntiClockwise();
+        UpdateTempFace();
+    }
+    public void RotateFrontClockwise()
+    {
+        cube.RotateFrontClockwise();
+        UpdateTempFace();
+    }
+    public void RotateFrontAntiClockwise()
+    {
+        cube.RotateFrontAntiClockwise();
+        UpdateTempFace();
+    }
+    public void RotateBackClockwise()
+    {
+        cube.RotateBackClockwise();
+        UpdateTempFace();
+    }
+    public void RotateBackAntiClockwise()
+    {
+        cube.RotateBackAntiClockwise();
+        UpdateTempFace();
+    }
+
+    //so this is the instruction and solving part!
+    public void NextInstruction()
+    {
+        cube.instruction.GetNextInstruction();
+        cube.ApplyCurrentInstructionToCube();
+    }
+    public void PreviousInstruction()
+    {
+        cube.UndoCurrentInstructionToCube();
+        cube.instruction.GetPreviousInstruction();
+    }
+    public void Scramble()
+    {
+        cube.levelOfDifficulty = "custom";
+        cube.ApplyScrambleToCube();
+    }
+    public void Easy()
+    {
+        cube.levelOfDifficulty = "easy";
+        cube.NumberOfMoves = 0; //so it is not a custom length of scrambling
+        cube.ApplyScrambleToCube();
+        List<string> TempSolvingstructions = cube.instruction.Solvinginstructions;
+    }
+    public void Medium()
+    {
+        cube.levelOfDifficulty = "medium";
+        cube.NumberOfMoves = 0;
+        cube.ApplyScrambleToCube();
+        List<string> TempSolvingstructions = cube.instruction.Solvinginstructions;
+    }
+    public void Hard()
+    {
+        cube.levelOfDifficulty = "hard";
+        cube.NumberOfMoves = 0;
+        cube.ApplyScrambleToCube();
+        List<string> TempSolvingstructions = cube.instruction.Solvinginstructions;
+    }
+    public void Custom()
+    {
+        customIsSelected = true;
+        cube.ApplyScrambleToCube();
+        List<string> TempSolvingstructions = cube.instruction.Solvinginstructions;
+
+    }
+    public void SubmitNumber()
+    {
+        cube.validatingNumberInput();
+    }
+    public void UpdateTempFace()
+    {
+        for (int r = 0; r < 3; r++)
+        {
+            for (int c = 0; c < 3; c++)
+            {
+                tempFace[r, c] = cube.faceList[5].FlipFaceDisplay()[r, c];
+            }
+        }
+    }
+}
